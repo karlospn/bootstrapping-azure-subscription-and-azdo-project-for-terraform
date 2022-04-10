@@ -1,4 +1,4 @@
-# Bootstrapping an Azure suscription to start using Terraform from Azure DevOps CI/CD Pipelines
+# How to bootstrap an Azure subscription and an Azure DevOps project to start using Terraform as an Iac (Infrastructure-as-Code) tool.
 
 @Work in Progress.
 
