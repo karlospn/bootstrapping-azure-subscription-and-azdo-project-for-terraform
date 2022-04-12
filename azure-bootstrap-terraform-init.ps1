@@ -2,6 +2,7 @@ Param(
     [Parameter(Mandatory=$True)]
     [bool] $ProvisionBootstrapResources
 )
+
 function Set-ConfigVars
 {
     Param
@@ -13,12 +14,10 @@ function Set-ConfigVars
     if (Test-Path -Path $FileName) 
     {
         $values = @{}
-
         Get-Content $FileName | Where-Object {$_.length -gt 0} | Where-Object {!$_.StartsWith("#")} | ForEach-Object {
             $var = $_.Split('=',2).Trim()
             $values[$var[0]] = $var[1]
         }
-
         return $values
     }
     else
@@ -39,7 +38,7 @@ function Connect-AzureSubscription
     )
 
     if (-not (Get-AzContext | Where-Object { $_.Subscription.Id -eq $SubId })) {
-        Write-Verbose "Logging in to Azure Subscription..."
+        Write-Host "Logging in to Azure Subscription..."
         Connect-AzAccount -SubscriptionId $SubId -TenantId $TenantId -ErrorAction Stop | Out-Null
     }
 
@@ -58,12 +57,12 @@ function New-ResourceGroup
 
     if( -not (Get-AzResourceGroup -Name $RgName -ErrorAction SilentlyContinue))
     {
-        Write-Verbose "Resource Group $RgName doesn't exist. Creating..."
+        Write-Host "Resource Group $RgName doesn't exist. Creating..."
         New-AzResourceGroup -Name $RgName -Location $Region -ErrorAction Stop
     }
     else
     {
-        Write-Verbose "Resource Group $RgName already exists."
+        Write-Host "Resource Group $RgName already exists."
     }
 }
 
@@ -83,22 +82,22 @@ function New-StorageAccount
 
     if( -not (Get-AzStorageAccount -Name $StAccName -ResourceGroupName $RgName -ErrorAction SilentlyContinue))
     {
-        Write-Verbose "Storage Account $StAccName doesn't exist. Creating..."
+        Write-Host "Storage Account $StAccName doesn't exist. Creating..."
         $storageAccount = New-AzStorageAccount -ResourceGroupName $RgName -Name $StAccName -Location $Region -SkuName Standard_LRS -ErrorAction Stop
-        New-AzStorageContainer -Name $StAccName -Permission Off -Context $storageAccount.Context -ErrorAction Stop
+        New-AzStorageContainer -Name $ContainerName -Permission Off -Context $storageAccount.Context -ErrorAction Stop
     }
     else
     {
-        Write-Verbose "Storage Account $StAccName already exists."
+        Write-Host "Storage Account $StAccName already exists."
         $storageAccount = Get-AzStorageAccount -Name $StAccName -ResourceGroupName $RgName -ErrorAction Stop
-        If( -not (Get-AzStorageContainer -Name $StAccName -Context $storageAccount.Context -ErrorAction SilentlyContinue))
+        If( -not (Get-AzStorageContainer -Name $ContainerName -Context $storageAccount.Context -ErrorAction SilentlyContinue))
         {
-            Write-Verbose "Storage Container $StAccName doesn't exist. Creating..."
+            Write-Host "Storage Container $StAccName doesn't exist. Creating..."
             New-AzStorageContainer -Name $ContainerName -Permission Off -Context $storageAccount.Context -ErrorAction Stop
         }
         else
         {
-            Write-Verbose "Storage Container $StAccName already exists."
+            Write-Host "Storage Container $StAccName already exists."
         }
     }
 }
@@ -114,10 +113,10 @@ function Set-EnvVarsAsTfVars
 
     $env:TF_VAR_tf_state_resource_group_name=$ConfigVars.tf_state_resource_group_name
     $env:TF_VAR_tf_state_storage_account_name=$ConfigVars.tf_state_storage_account_name
-    $env:TF_VAR_tf_project_name=$ConfigVars.project_name
-    $env:TF_VAR_tf_azure_region=$ConfigVars.azure_region
+    $env:TF_VAR_project_name=$ConfigVars.project_name
+    $env:TF_VAR_azure_region=$ConfigVars.azure_region
     $env:TF_VAR_azdo_org_url=$ConfigVars.azdo_org_url
-    $env:TF_VAR_tf_azdo_project_name=$ConfigVars.azdo_project_name
+    $env:TF_VAR_azdo_project_name=$ConfigVars.azdo_project_name
     $env:TF_VAR_azdo_pat=$ConfigVars.azdo_pat
 }
 
@@ -133,10 +132,20 @@ function Invoke-TerraformInit
         [string] $ContainerName
     )
 
-    terraform init -input=false -backend=true -reconfigure `
+    $result = & terraform init -input=false -backend=true -reconfigure `
         -backend-config="resource_group_name=$RgName" `
         -backend-config="storage_account_name=$StAccName" `
-        -backend-config="container_name=$ContainerName"
+        -backend-config="container_name=$ContainerName" 2>&1 | out-string
+
+    if ($result -notmatch "Terraform has been successfully initialized!" -eq $true) 
+    {
+        Write-Error $result
+        exit 1
+    }
+    else
+    {
+        Write-Host "Terraform Initialized Successfully"
+    }
 }
 
 function Import-TerraformState
@@ -151,8 +160,27 @@ function Import-TerraformState
         [string] $StAccName
     )
 
-    terraform import azurerm_resource_group.tf_state_rg "/subscriptions/$SubId/resourceGroups/$RgName"
-    terraform import azurerm_storage_account.tf_state_storage "/subscriptions/$SubId/resourceGroups/$RgName/providers/Microsoft.Storage/storageAccounts/$StAccName"
+    Write-Host "Importing Resource Group to tf state" 
+    $results1 = & terraform import "azurerm_resource_group.tf_state_rg" "/subscriptions/$SubId/resourceGroups/$RgName" 2>&1 | out-string
+
+    Write-Host "Importing Storage Account to tf state"
+    $results2 = & terraform import "azurerm_storage_account.tf_state_storage" "/subscriptions/$SubId/resourceGroups/$RgName/providers/Microsoft.Storage/storageAccounts/$StAccName" 2>&1 | out-string
+
+    if (($results1 -notmatch "Resource already managed by Terraform") -and
+        ($results1 -notmatch "Import successful!") -and
+        ($results1 -notmatch "Cannot import non-existent remote object") -eq $true) {
+
+        Write-Error $results1
+        exit 1
+    }
+
+    if (($results2 -notmatch "Resource already managed by Terraform") -and
+        ($results2 -notmatch "Import successful!") -and
+        ($results2 -notmatch "Cannot import non-existent remote object") -eq $true) {
+
+        Write-Error $results2
+        exit 1
+    }
 }
 
 function Invoke-TerraformPlan
@@ -169,20 +197,23 @@ function main
 {
     $configVarsFileName = "config.env"
 
-    $configValues = Set-ConfigVars -FileName $configVarsFileName
+    $configVars = Set-ConfigVars -FileName $configVarsFileName
     
-    Connect-AzureSubscription -SubId $configValues.azure_subscription_id `
-                -TenantId $configValues.azure_tenant_id
+    Connect-AzureSubscription -SubId $configVars.azure_subscription_id `
+                -TenantId $configVars.azure_tenant_id
+
+    Set-EnvVarsAsTfVars -ConfigVars $configVars
+
 
     if ($ProvisionBootstrapResources -eq $true)
     {
-        New-ResourceGroup -RgName $configValues.tf_state_resource_group_name `
-                -Region $configValues.azure_region
+        New-ResourceGroup -RgName $configVars.tf_state_resource_group_name `
+                -Region $configVars.azure_region
 
-        New-StorageAccount -RgName $configValues.tf_state_resource_group_name `
-                -StAccName $configValues.tf_state_storage_account_name `
-                -ContainerName $configValues.tf_state_storage_account_container_name `
-                -Region $configValues.azure_region
+        New-StorageAccount -RgName $configVars.tf_state_resource_group_name `
+                -StAccName $configVars.tf_state_storage_account_name `
+                -ContainerName $configVars.tf_state_storage_account_container_name `
+                -Region $configVars.azure_region
 
         Invoke-TerraformInit -RgName $configVars.tf_state_resource_group_name `
                 -StAccName $configVars.tf_state_storage_account_name `
@@ -190,11 +221,9 @@ function main
 
         Import-TerraformState -SubId $configVars.azure_subscription_id `
                 -RgName $configVars.tf_state_resource_group_name `
-                -StAccName $configVars.tf_state_storage_account_name 
+                -StAccName $configVars.tf_state_storage_account_name
     }
-    
-    Set-EnvVarsAsTfVars -ConfigVars $configVars
-    
+      
     Invoke-TerraformInit -RgName $configVars.tf_state_resource_group_name `
                 -StAccName $configVars.tf_state_storage_account_name `
                 -ContainerName $configVars.tf_state_storage_account_container_name
