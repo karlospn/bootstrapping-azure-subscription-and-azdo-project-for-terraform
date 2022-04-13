@@ -274,10 +274,14 @@ function main
                 -RgName $configVars.tf_state_resource_group_name `
                 -StAccName $configVars.tf_state_storage_account_name
     }
+
+    if ($ProvisionBootstrapResources -eq $false)
+    {
       
-    Invoke-TerraformInit -RgName $configVars.tf_state_resource_group_name `
-                -StAccName $configVars.tf_state_storage_account_name `
-                -ContainerName $configVars.tf_state_storage_account_container_name
+        Invoke-TerraformInit -RgName $configVars.tf_state_resource_group_name `
+                    -StAccName $configVars.tf_state_storage_account_name `
+                    -ContainerName $configVars.tf_state_storage_account_container_name
+    }
     
     Invoke-TerraformPlan
     Read-Host -Prompt "Press any key to run terraform apply or CTRL+C to quit" 
