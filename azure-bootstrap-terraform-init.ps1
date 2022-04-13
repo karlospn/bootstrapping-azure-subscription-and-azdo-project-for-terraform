@@ -1,6 +1,6 @@
 Param(
     [Parameter(Mandatory=$True)]
-    [bool] $ProvisionBootstrapResources
+    [bool] $ProvisionBootstrapResources = $false
 )
 
 function Set-ConfigVars
@@ -92,12 +92,12 @@ function New-StorageAccount
         $storageAccount = Get-AzStorageAccount -Name $StAccName -ResourceGroupName $RgName -ErrorAction Stop
         If( -not (Get-AzStorageContainer -Name $ContainerName -Context $storageAccount.Context -ErrorAction SilentlyContinue))
         {
-            Write-Host "Storage Container $StAccName doesn't exist. Creating..."
+            Write-Host "Storage Container $ContainerName doesn't exist. Creating..."
             New-AzStorageContainer -Name $ContainerName -Permission Off -Context $storageAccount.Context -ErrorAction Stop
         }
         else
         {
-            Write-Host "Storage Container $StAccName already exists."
+            Write-Host "Storage Container $ContainerName already exists."
         }
     }
 }
