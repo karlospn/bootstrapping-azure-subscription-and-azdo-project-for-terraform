@@ -1,4 +1,4 @@
-# How to bootstrap an Azure subscription and an Azure DevOps project to start using Terraform as an IaC (Infrastructure-as-Code) tool.
+# How to bootstrap an Azure subscription and an Azure DevOps project to start deploying Infrastructure-as-Code (IaC) with Terraform.
 
 @Work in Progress.
 
