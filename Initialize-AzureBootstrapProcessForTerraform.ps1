@@ -11,13 +11,15 @@
 
    To run the script you'll need to have installed on your local machine Terraform and the Azure Powershell Az Module. For more information go to: https://docs.microsoft.com/es-es/powershell/azure/what-is-azure-powershell?view=azps-7.4.0
  
+   If you don't want to run the script on your local machine, you can use Azure Cloud Shell. You just need to upload the Initialize-AzureBootstrapProcessForTerraform.ps1 file, the config.env file, the main.tf file and the variables.tf file.
+
    The config.env file allows to configure the bootstrap process. You can change the values on this file to your liking, but you must NOT change the name of the defined variables within the config.env file.
  
 .PARAMETER ProvisionBootStrapResources
   Set it to $True if you want to create the bootstrap resources from zero. If you want to update some existing resource set it to $False and Terraform will take care of it.
  
 .EXAMPLE
-   ./Initialize-AzureBootstrapProcessForTerraform.ps1 ProvisionBootStrapResources $True
+   ./Initialize-AzureBootstrapProcessForTerraform.ps1 -ProvisionBootStrapResources $True
  
    Creates a Resource Group and a Storage Account using the Azure Az Powershell Module.
 
@@ -29,7 +31,7 @@
     
    The Terraform step also creates/updates another Service Principal that will be used to link the Azure DevOps variable group with the Key Vault.
 
-   ./Initialize-AzureBootstrapProcessForTerraform.ps1 ProvisionBootStrapResources $False
+   ./Initialize-AzureBootstrapProcessForTerraform.ps1 -ProvisionBootStrapResources $False
  
    Inits Terraform using the Storage Account as backend.
    
