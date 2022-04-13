@@ -228,7 +228,7 @@ resource "azurerm_role_assignment" "iac_role_assignment" {
 
 ## Store SP client secret in the KV
 resource "azurerm_key_vault_secret" "iac_sp_secret" {
-  name         = "sp-tf-bs-iac-client-secret"
+  name         = "sp-bs-tf-iac-client-secret"
   value        = azuread_application_password.iac_sp_password.value
   key_vault_id = azurerm_key_vault.sp_creds_kv.id
   tags = var.default_tags
@@ -236,7 +236,7 @@ resource "azurerm_key_vault_secret" "iac_sp_secret" {
 
 ## Store SP client secret in the KV
 resource "azurerm_key_vault_secret" "iac_sp_clientid" {
-  name         = "sp-tf-bs-iac-client-id"
+  name         = "sp-bs-tf-iac-client-id"
   value        = azuread_service_principal.iac_sp.application_id
   key_vault_id = azurerm_key_vault.sp_creds_kv.id
   tags = var.default_tags
@@ -244,7 +244,7 @@ resource "azurerm_key_vault_secret" "iac_sp_clientid" {
 
 ## Store SP client secret in the KV
 resource "azurerm_key_vault_secret" "iac_sp_tenant" {
-  name         = "sp-tf-bs-iac-tenant-id"
+  name         = "sp-bs-tf-iac-tenant-id"
   value        = data.azurerm_client_config.current.tenant_id
   key_vault_id = azurerm_key_vault.sp_creds_kv.id
   tags = var.default_tags
@@ -252,7 +252,7 @@ resource "azurerm_key_vault_secret" "iac_sp_tenant" {
 
 ## Store SP client secret in the KV
 resource "azurerm_key_vault_secret" "iac_sp_subid" {
-  name         = "sp-tf-bs-iac-subscription-id"
+  name         = "sp-bs-tf-iac-subscription-id"
   value        = data.azurerm_client_config.current.subscription_id
   key_vault_id = azurerm_key_vault.sp_creds_kv.id
   tags = var.default_tags
@@ -277,20 +277,27 @@ resource "azuredevops_variable_group" "azdo_iac_var_group" {
     service_endpoint_id = azuredevops_serviceendpoint_azurerm.keyvault_access.id
   }
 
+  depends_on = [
+    azurerm_key_vault_secret.iac_sp_secret,
+    azurerm_key_vault_secret.iac_sp_clientid,
+    azurerm_key_vault_secret.iac_sp_tenant,
+    azurerm_key_vault_secret.iac_sp_subid
+  ]
+
   variable {
-    name = "sp-tf-bs-iac-client-id"
+    name = "sp-bs-tf-iac-client-id"
   }
 
   variable {
-    name = "sp-tf-bs-iac-client-secret"
+    name = "sp-bs-tf-iac-client-secret"
   }
 
   variable {
-    name = "sp-tf-bs-iac-tenant-id"
+    name = "sp-bs-tf-iac-tenant-id"
   }
 
   variable {
-    name = "sp-tf-bs-iac-subscription-id"
+    name = "sp-bs-tf-iac-subscription-id"
   }
 }
 
