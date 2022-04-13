@@ -1,3 +1,52 @@
+<#
+.Synopsis
+   Bootstraps an Azure Subscription and an Azure DevOps project to start using Terraform.
+ 
+.DESCRIPTION
+   The Initialize-AzureBootstrapProcessForTerraform cmdlet allows to bootstrap an Azure Subscription and an Azure DevOps project to start using Terraform.
+ 
+   To create the necessary resources on Azure the user running this script needs to have an Owner Role on the target Azure Subscription and an Application Administrator Role on Azure Active Directory
+   
+   To create the necessary resources on Azure DevOps the user running this script needs a PAT (Personal Access Token) with a Full Access scope.
+
+   To run the script you'll need to have installed on your local machine Terraform and the Azure Powershell Az Module. For more information go to: https://docs.microsoft.com/es-es/powershell/azure/what-is-azure-powershell?view=azps-7.4.0
+ 
+   The config.env file allows to configure the bootstrap process. You can change the values on this file to your liking, but you must NOT change the name of the defined variables within the config.env file.
+ 
+.PARAMETER ProvisionBootStrapResources
+  Set it to $True if you want to create the bootstrap resources from zero. If you want to update some existing resource set it to $False and Terraform will take care of it.
+ 
+.EXAMPLE
+   ./Initialize-AzureBootstrapProcessForTerraform.ps1 ProvisionBootStrapResources $True
+ 
+   Creates a Resource Group and a Storage Account using the Azure Az Powershell Module.
+
+   Inits Terraform using the Storage Account as backend.
+   
+   Imports these 2 resources into the Terraform state.
+
+   Uses Terraform to create/update a Service Principal for deploying the infrastructure with a custom Role, an Azure DevOps variable group, a Key Vault and puts the Service Principal credentials inside the KeyVault.
+    
+   The Terraform step also creates/updates another Service Principal that will be used to link the Azure DevOps variable group with the Key Vault.
+
+   ./Initialize-AzureBootstrapProcessForTerraform.ps1 ProvisionBootStrapResources $False
+ 
+   Inits Terraform using the Storage Account as backend.
+   
+   Uses Terraform to create/update a Service Principal for deploying the infrastructure with a custom Role, an Azure DevOps variable group, a Key Vault and puts the Service Principal credentials inside the KeyVault.
+    
+   The Terraform step also creates/updates another Service Principal that will be used to link the Azure DevOps variable group with the Key Vault.
+   
+.INPUTS
+   None. You cannot pipe objects to Initialize-AzureBootstrapProcessForTerraform.ps1
+
+.OUTPUTS
+   None. Initialize-AzureBootstrapProcessForTerraform.ps1 does not generate any output
+ 
+.LINK
+    https://docs.microsoft.com/es-es/powershell/azure/what-is-azure-powershell?view=azps-7.4.0 - information about Azure Az Powershell module.
+#>
+
 Param(
     [Parameter(Mandatory=$True)]
     [bool] $ProvisionBootstrapResources = $false
