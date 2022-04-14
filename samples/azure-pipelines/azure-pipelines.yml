@@ -1,0 +1,78 @@
+trigger: none
+
+parameters:
+- name: terraform_destroy
+  type: boolean
+  default: false
+- name: terraform_apply
+  type: boolean
+  default: false
+- name: terraform_plan
+  type: boolean
+  default: true
+
+
+variables:
+  - group: vargroup-bs-tf-iac-myproject-dev
+  - name: STATE_RESGRP
+    value: rg-bs-tf-myproject-dev
+  - name: STATE_ACCOUNT
+    value: stbstfmyprojectdev
+  - name: STATE_CONTAINER
+    value: tfstate
+  - name: KEY_NAME
+    value: shared-svc-group-myproject-dev
+  - name: CURRENT_PATH
+    value: ./samples/azure-pipelines
+
+pool: 
+  vmImage: 'ubuntu-latest'
+
+steps:  
+  - bash: |
+      terraform init -input=false -backend=true -reconfigure \
+      -backend-config="resource_group_name=$(STATE_RESGRP)" \
+      -backend-config="storage_account_name=$(STATE_ACCOUNT)" \
+      -backend-config="container_name=$(STATE_CONTAINER)" \
+      -backend-config="key=$(KEY_NAME).tfstate"
+    workingDirectory: $(CURRENT_PATH)
+    displayName: Initialize Terraform backend state
+    env:
+      ARM_CLIENT_ID: $(sp-bs-tf-iac-client-id)
+      ARM_CLIENT_SECRET: $(sp-bs-tf-iac-client-secret)
+      ARM_TENANT_ID: $(sp-bs-tf-iac-tenant-id)
+      ARM_SUBSCRIPTION_ID: $(sp-bs-tf-iac-subscription-id)
+  
+  - bash: |
+      terraform plan -input=false
+    condition: and(succeeded(), eq('${{ parameters.terraform_plan }}', true))
+    workingDirectory: $(CURRENT_PATH)
+    displayName: Plan Terraform changes
+    env:
+      ARM_CLIENT_ID: $(sp-bs-tf-iac-client-id)
+      ARM_CLIENT_SECRET: $(sp-bs-tf-iac-client-secret)
+      ARM_TENANT_ID: $(sp-bs-tf-iac-tenant-id)
+      ARM_SUBSCRIPTION_ID: $(sp-bs-tf-iac-subscription-id)
+  
+  - bash: |
+      terraform apply -input=false -auto-approve
+    condition: and(succeeded(), eq('${{ parameters.terraform_apply }}', true))
+    workingDirectory: $(CURRENT_PATH)
+    displayName: Apply Terraform changes
+    env:
+      ARM_CLIENT_ID: $(sp-bs-tf-iac-client-id)
+      ARM_CLIENT_SECRET: $(sp-bs-tf-iac-client-secret)
+      ARM_TENANT_ID: $(sp-bs-tf-iac-tenant-id)
+      ARM_SUBSCRIPTION_ID: $(sp-bs-tf-iac-subscription-id)
+
+  - bash: |
+      terraform destroy -input=false -auto-approve
+    condition: and(succeeded(), eq('${{ parameters.terraform_destroy }}', true))
+    workingDirectory: $(CURRENT_PATH)
+    displayName: Destroy Terraform 
+    env:
+      ARM_CLIENT_ID: $(sp-bs-tf-iac-client-id)
+      ARM_CLIENT_SECRET: $(sp-bs-tf-iac-client-secret)
+      ARM_TENANT_ID: $(sp-bs-tf-iac-tenant-id)
+      ARM_SUBSCRIPTION_ID: $(sp-bs-tf-iac-subscription-id)
+
