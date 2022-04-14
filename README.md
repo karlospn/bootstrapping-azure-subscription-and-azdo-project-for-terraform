@@ -8,28 +8,32 @@ The script does the following steps:
 
 - Creates a Resource Group and a Storage Account using the Azure Az Powershell Module.
 - Inits Terraform using the Storage Account as backend.
-- Imports these 2 resources into the Terraform state.
+- Imports those 2 resources into the Terraform state.
 - Uses Terraform to create the rest of the resources.
 
-We could create all the resources using only Powershell, without the need of Terraform, but using Terraform to create the needed resources and to update them is simpler, less error prone and easier to mantain.
+We could create all the resources using only Powershell and without the need of Terraform, but using Terraform to create and update them is simpler, less error prone and easier to mantain.
 
-The script needs a parameter named ``ProvisionBootStrapResources``.   
+**The execute the script you need to pass it a parameter named ``ProvisionBootStrapResources``.** 
 
-When the ``ProvisionBootStrapResources`` parameter is set to ``$True`` it will execute the entire script, which means creating the resource group and the storage account for the tf state using the Az module and executing a Terraform Init, Plan and Apply commands.   
-if this is the first time you run the script and want to create the bootstrap resources from zero, set it to ``$True``
+_Example: ``./Initialize-AzureBootstrapProcessForTerraform.ps1 -ProvisionBootStrapResources $True``_
+
+When the ``ProvisionBootStrapResources`` parameter is set to ``$True`` it will execute the entire script, which means:
+- Creating the resource group and the storage account for the tf state using the Az module
+- Executing the Terraform Init, Plan and Apply commands to create the rest of the resources.      
+
+If this is the first time you run the script and want to create the all the resources from zero, set it to ``$True``.
 
 When the ``ProvisionBootStrapResources`` parameter is set to ``$False`` it will skip the steps of creating the resource group and the storage account, it will only run the Terraform Init, Plan and Apply steps.   
-If you have modified the ``main.tf`` file to add or update some existing resource set it to ``$False``.
+If you have modified the ``main.tf`` file to add or update some existing resources set it to ``$False``.
 
-Example: ``./Initialize-AzureBootstrapProcessForTerraform.ps1 -ProvisionBootStrapResources $True``
 
 # Configuration
 
 Reusability is key, I don't want to modify the script every time I need to bootstrap a new subscription.
 
-To avoid that there is a ``config.env`` file, that contains the script configuration.
+To avoid that, there is a ``config.env`` file that contains the script configuration.
 
-You can change the values on this file to your liking, but you must NOT change the name of the defined variables within the config.env file or the script will break.
+You can change the values on this file to your liking, but you must **NOT** change the name of the variables within the ``config.env`` file or the script will break.
 
 
 - ``tf_state_resource_group_name``: The name of the resource group.
@@ -87,7 +91,7 @@ And afterwards, just execute the ``Initialize-AzureBootstrapProcessForTerraform.
 To run the script you'll need to have the following permissions:
 
 - An ``Owner`` Role on the target Azure Subscription.
-- An ``Application Administrator`` on Azure Active Directory.
+- An ``Application Administrator`` Role on Azure Active Directory.
 - An ``Azure DevOps PAT`` (Personal Access Token) with a Full Access scope.
 
 
@@ -102,3 +106,8 @@ To run the script you'll need to have the following permissions:
 - An Azure DevOps variable group that holds the credentials of the Service Principal.
   - The script links the Azure Key Vault we have created with this variable group and map the SP credentials to the variable group, but to do that we will need another Service Principal.
 - A secondary Service Principal with a ``Key Vault Administrator`` role associated at the resource group scope.
+
+
+# Azure DevOps pipeline example
+
+The ``/samples/azure-pipelines`` folder contains an example of how you can deploy infrastructure.
