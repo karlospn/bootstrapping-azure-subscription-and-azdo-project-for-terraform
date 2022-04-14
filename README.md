@@ -1,6 +1,6 @@
 # How to bootstrap an Azure subscription and an Azure DevOps project to start deploying infrastructure as code (IaC) with Terraform.
 
-This repository contains a script (AzureBootstrapProcessForTerraform.ps1) used to bootstrap an Azure subscription and an Azure DevOps project to start deploying infrastructure with Terraform.
+This repository contains a script (``AzureBootstrapProcessForTerraform.ps1``) used to bootstrap an Azure subscription and an Azure DevOps project to start deploying infrastructure with Terraform.
 
 # How it works
 
@@ -86,9 +86,9 @@ And afterwards, just execute the ``Initialize-AzureBootstrapProcessForTerraform.
 
 To run the script you'll need to have the following permissions:
 
-- An Owner Role on the target Azure Subscription.
-- An Application Administrator on Azure Active Directory.
-- An Azure DevOps PAT (Personal Access Token) with a Full Access scope.
+- An ``Owner`` Role on the target Azure Subscription.
+- An ``Application Administrator`` on Azure Active Directory.
+- An ``Azure DevOps PAT`` (Personal Access Token) with a Full Access scope.
 
 
 # Resources it creates
