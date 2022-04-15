@@ -13,12 +13,12 @@ The script does the following steps:
 
 We could create all the resources using only Powershell and without the need of Terraform, but using Terraform to create and update them is simpler, less error prone and easier to mantain.
 
-**The execute the script you need to pass it a parameter named ``ProvisionBootStrapResources``.** 
+**To execute the script you need to pass it a parameter named ``ProvisionBootStrapResources``.** 
 
 _Example: ``./Initialize-AzureBootstrapProcessForTerraform.ps1 -ProvisionBootStrapResources $True``_
 
 When the ``ProvisionBootStrapResources`` parameter is set to ``$True`` it will execute the entire script, which means:
-- Creating the resource group and the storage account for the tf state using the Az module
+- Creating the resource group and the storage account for the tf state using the Powershell Az module
 - Executing the Terraform Init, Plan and Apply commands to create the rest of the resources.      
 
 If this is the first time you run the script and want to create the all the resources from zero, set it to ``$True``.
@@ -98,7 +98,7 @@ To run the script you'll need to have the following permissions:
 # Resources it creates
 - A Resource Group.
 - An Storage Account to hold the Terraform State.
-- A Service Principal that will be used by Azure DevOps to deploy the infrastructure onto Azure. This SP will use a custom role.
+- A Service Principal that will be used by Azure DevOps to deploy the infrastructure onto Azure. This SP uses a custom role.
 - A custom role. 
   - This custom role has the same permissions as ``Contributor`` but can create role assigmnemts. It also have permissions to read, write and delete data on Azure Key Vault and App Configuration.
 - A Key Vault to hold the credentials of the Service Principal.
