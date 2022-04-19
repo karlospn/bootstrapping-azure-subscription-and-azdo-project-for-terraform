@@ -48,14 +48,14 @@ data "azuredevops_project" "project" {
 ## Start Importing existing resources into tf
 ##########################################################################################
 
-## Create resource group. Already exists created by azure-bootstrap-terraform-init.sh
+## Create resource group. Already exists created by the powershell Initialize-AzureBootstrapProcessForTerraform.ps1 script
 resource "azurerm_resource_group" "tf_state_rg" {
   name     = var.tf_state_resource_group_name
   location = var.azure_region
   tags = var.default_tags
 }
 
-## Creates store account that hold Terraform shared state. Already exists created by azure-bootstrap-terraform-init.sh
+## Creates store account that hold Terraform shared state. Already exists created by the powershell Initialize-AzureBootstrapProcessForTerraform.ps1 script
 resource "azurerm_storage_account" "tf_state_storage" {
   name                     = var.tf_state_storage_account_name
   resource_group_name      = azurerm_resource_group.tf_state_rg.name
