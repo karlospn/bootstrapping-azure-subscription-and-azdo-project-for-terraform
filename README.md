@@ -21,7 +21,7 @@ When the ``ProvisionBootStrapResources`` parameter is set to ``$True`` it will e
 - Creating the resource group and the storage account for the tf state using the Powershell Az module
 - Executing the Terraform Init, Plan and Apply commands to create the rest of the resources.      
 
-If this is the first time you run the script and want to create the all the resources from zero, set it to ``$True``.
+If this is the first time you run the script and want to create all the resources from zero, set it to ``$True``.
 
 When the ``ProvisionBootStrapResources`` parameter is set to ``$False`` it will skip the steps of creating the resource group and the storage account, it will only run the Terraform Init, Plan and Apply steps.   
 If you have modified the ``main.tf`` file to add or update some existing resources set it to ``$False``.
